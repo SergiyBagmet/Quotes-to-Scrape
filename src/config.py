@@ -13,6 +13,6 @@ retry_writes = config.get('DB', 'RETRY_WRITES')
 ssl = config.get('DB', 'SSL')
 
 mongo_uri = (
-    f"mongodb+srv://{username}:{password}@{domain}/{db_name}"
+    f"mongodb+srv://{username}:{password}@{domain}/"
     f"?retryWrites={retry_writes}&w=majority&ssl={ssl}"
 )
