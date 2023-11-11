@@ -1,9 +1,9 @@
-import typing as t
+from redis_lru import RedisLRU
 
-from src.config import mongo_uri, db_name
+from src.config import mongo_uri, db_name, client
 from src.models import Quote, Author
 from src.crud import MongoCRUD
-from src.db import MongoDBConnection, MongoDBError
+from src.db import MongoDBConnection
 
 mongo_connection = MongoDBConnection(db_uri=mongo_uri)
 
@@ -70,7 +70,9 @@ class QuoteSearch:
 
 @mongo_connection(db_name=db_name)
 def main():
-    crud = MongoCRUD()
+    radis_cache = RedisLRU(client, max_size=20)
+    crud = MongoCRUD(cache=radis_cache)
+
     q_search = QuoteSearch(crud)
     q_search.execute()
 

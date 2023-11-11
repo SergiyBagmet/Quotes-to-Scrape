@@ -1,6 +1,9 @@
 import configparser
 from pathlib import Path
 
+import redis
+
+
 file_config = Path(__file__).parent.parent.joinpath("config.ini")
 config = configparser.ConfigParser()
 config.read(file_config)
@@ -16,3 +19,11 @@ mongo_uri = (
     f"mongodb+srv://{username}:{password}@{domain}/"
     f"?retryWrites={retry_writes}&w=majority&ssl={ssl}"
 )
+
+
+redis_host = config.get('REDIS', 'HOST')
+redis_port = config.getint('REDIS', 'PORT')
+redis_password = config.get('REDIS', 'PASSWORD', fallback=None)
+
+client = redis.StrictRedis(host=redis_host, port=redis_port, password=redis_password)
+

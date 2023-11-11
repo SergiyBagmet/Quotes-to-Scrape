@@ -1,12 +1,31 @@
 import typing as t
+from functools import wraps
 
+
+from redis_lru import RedisLRU
 from bson.objectid import ObjectId
 from mongoengine import Document, DoesNotExist
 
 
 class MongoCRUD:
-    def __init__(self, document_class: t.Type[Document] | None = None):
+    def __init__(self,
+                 document_class: t.Type[Document] | None = None,
+                 cache: t.Optional[RedisLRU] = None
+                 ):
+
         self.document_class = document_class
+        self.cache = cache
+
+    @staticmethod
+    def cache_decorator(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            if self.cache:
+                return self.cache(func)(self, *args, **kwargs)
+            else:
+                return func(self, *args, **kwargs)
+
+        return wrapper
 
     @property
     def document_class(self) -> t.Type[Document]:
@@ -23,6 +42,7 @@ class MongoCRUD:
         new_document.save()
         return new_document
 
+    @cache_decorator
     def read(self, pk: ObjectId):
         try:
             document = self.document_class.objects.get(id=pk)
@@ -30,6 +50,7 @@ class MongoCRUD:
         except DoesNotExist:
             return None
 
+    @cache_decorator
     def read_by_attr(self, attr_name: str, value: str, count: str = 'one'):
         doc = None
         try:

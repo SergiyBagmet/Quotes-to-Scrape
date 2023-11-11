@@ -3,10 +3,6 @@ from mongoengine import connect, disconnect
 from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure, OperationFailure, ConfigurationError
 
 
-class MongoDBError(Exception):
-    pass
-
-
 class MongoDBConnection:
     def __init__(self, db_uri: str, ):
         self.db_uri = db_uri
