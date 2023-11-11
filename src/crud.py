@@ -30,10 +30,14 @@ class MongoCRUD:
         except DoesNotExist:
             return None
 
-    def read_by_attr(self, attr_name: str, value: str):
+    def read_by_attr(self, attr_name: str, value: str, count: str = 'one'):
+        doc = None
         try:
-            document = self.document_class.objects.get(**{attr_name: value})
-            return document
+            if count == 'one':
+                doc = self.document_class.objects.get(**{attr_name: value})
+            elif count == 'many':
+                doc = self.document_class.objects.filter(**{attr_name: value})
+            return doc
         except DoesNotExist:
             return None
 

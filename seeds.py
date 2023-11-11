@@ -3,11 +3,11 @@ import typing as t
 from bson.objectid import ObjectId
 from mongoengine import Document
 from src.models import Author, Quote
-from src.db import mongo_connection
+from src.db import MongoDBConnection
 from src.crud import MongoCRUD
 from src.config import mongo_uri, db_name
 
-mongo_crud = MongoCRUD()
+db_connection = MongoDBConnection(mongo_uri)
 
 
 class Seeder:
@@ -35,8 +35,9 @@ class Seeder:
             self.crud.create(el)
 
 
-@mongo_connection(mongo_uri, db_name=db_name)
+@db_connection(db_name=db_name)
 def run_seeder():
+    mongo_crud = MongoCRUD()
     seeder = Seeder(mongo_crud)
     seeder.json_to_db("start_data/authors.json", doc_cls=Author)
 
@@ -45,12 +46,6 @@ def run_seeder():
                       ref_cls=Author,
                       ref_field='fullname',
                       data_field='author')
-
-
-@mongo_connection(mongo_uri, db_name=db_name)
-def test():
-    mongo_crud.document_class = Author
-    print(mongo_crud.read_by_attr(attr_name='fullname', value='Albert Einstein'))
 
 
 if __name__ == '__main__':
