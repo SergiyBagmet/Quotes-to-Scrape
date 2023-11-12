@@ -1,4 +1,4 @@
-import json
+import typing as t
 
 from pika import BlockingConnection
 from faker import Faker
@@ -16,10 +16,13 @@ mongo_crud = MongoCRUD()
 fake = Faker()
 seed = Seeder(mongo_crud, fake)
 
+count_contacts = 10
+exchange = "Senders"
+queue_args = {"email_queue": "email", "sms_queue": "sms"}
+
 
 @db_connection(db_name)
-def producer_contacts(connection: BlockingConnection, count: int, exchange_name: str, queue_names: list[str]):
-
+def producer_contacts(connection: BlockingConnection, count: int, exchange_name: str, queue_names: t.Iterable[str]):
     channel = connection.channel()
     channel.exchange_declare(exchange=exchange_name, exchange_type='direct')
 
@@ -39,4 +42,4 @@ def producer_contacts(connection: BlockingConnection, count: int, exchange_name:
 
 
 if __name__ == '__main__':
-    producer_contacts(connection_rmq, 10, "Senders", ["email_queue", "sms_queue"])
+    producer_contacts(connection_rmq, count_contacts, exchange, queue_args.keys())

@@ -1,7 +1,6 @@
 import typing as t
 from functools import wraps
 
-
 from redis_lru import RedisLRU
 from bson.objectid import ObjectId
 from mongoengine import Document, DoesNotExist
@@ -71,6 +70,15 @@ class MongoCRUD:
             document: Document = self.document_class.objects.get(id=pk)
             document.update(**document_data)
             return document
+        except DoesNotExist:
+            return None
+
+    def update_send_status(self, pk: ObjectId, send_key: str, status: bool):
+        try:
+            document: Document = self.document_class.objects.get(id=pk)
+            if document and hasattr(document, 'sent_status'):
+                document.update(**{f'set__sent_status__{send_key}': status})
+                return document
         except DoesNotExist:
             return None
 
