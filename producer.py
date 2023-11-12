@@ -29,11 +29,11 @@ def producer_contacts(connection: BlockingConnection, count: int, exchange_name:
 
     for _ in range(count):
         contact = seed.fake_to_db(Contact)
-        message = json.dumps(str(contact.id)).encode()
+        message = str(contact.id).encode('utf-8')
 
         for queue_name in queue_names:
             channel.basic_publish(exchange=exchange_name, routing_key=queue_name, body=message)
-            print(f" [x] queue[{queue_name}] Sent: {message} for contact {contact.id}")
+            print(f" [x] queue[{queue_name}] Sent: {message}")
 
     channel.close()
 
