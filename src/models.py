@@ -1,5 +1,5 @@
 from mongoengine import Document, CASCADE
-from mongoengine.fields import ListField, StringField, ReferenceField
+from mongoengine.fields import ListField, StringField, ReferenceField, EmailField, BooleanField, DictField
 
 
 class Author(Document):
@@ -16,3 +16,14 @@ class Quote(Document):
     quote = StringField()
 
     meta = {"collection": "quotes_of"}
+
+
+class Contact(Document):
+    full_name = StringField(required=True)
+    email = EmailField(required=True)
+    phone_number = StringField()
+    address = StringField()
+
+    sent_status = DictField(default={'email_sent': False, 'sms_sent': False})
+
+    meta = {'collection': 'contacts'}
