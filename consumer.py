@@ -15,6 +15,11 @@ db_name = "contact_db"
 contact_crud = MongoCRUD(Contact)
 
 
+def sent_message(contact_name: str, action: str):
+    print(f" [x] Send {action} to  {contact_name}")
+    return 1
+
+
 @db_connection(db_name)
 def consumer_contacts(connection: BlockingConnection, crud: MongoCRUD, exchange_name: str, queue_field: dict[str]):
     channel = connection.channel()
@@ -26,7 +31,7 @@ def consumer_contacts(connection: BlockingConnection, crud: MongoCRUD, exchange_
         send_attr = f"{send_key}_sent"
         contact = crud.read(message)
         if contact is not None:
-            print(f" [x] Send {send_key} to  {contact.full_name}")
+            sent_message(send_key, contact.full_name)
             crud.update_send_status(contact.id, send_attr, True)
 
         print(f" [x] Completed {method.delivery_tag} task")
