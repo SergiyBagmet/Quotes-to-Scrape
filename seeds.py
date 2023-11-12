@@ -2,8 +2,9 @@ import json
 import typing as t
 
 from mongoengine import Document
+from faker import Faker
 
-from src.models import Author, Quote
+from src.models import Author, Quote, FakerDoc
 from src.db import MongoDBConnection
 from src.crud import MongoCRUD
 from src.config import mongo_uri, db_name
@@ -12,8 +13,14 @@ db_connection = MongoDBConnection(mongo_uri)
 
 
 class Seeder:
-    def __init__(self, crud: MongoCRUD):
+    def __init__(self, crud: MongoCRUD, fake: Faker | None = None):
         self.crud = crud
+        self.fake = fake if fake is not None else None
+
+    def fake_to_db(self, doc_cls: t.Type[FakerDoc], count: int):
+        self.crud.document_class = doc_cls
+        for _ in range(count):
+            self.crud.create(doc_cls.get_data_faker(self.fake))
 
     def json_to_db(self,
                    json_path,

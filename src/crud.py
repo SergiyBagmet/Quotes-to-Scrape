@@ -34,6 +34,7 @@ class MongoCRUD:
     @document_class.setter
     def document_class(self, new_document_class: t.Type[Document] | None):
         if new_document_class and not issubclass(new_document_class, Document):
+            pass
             raise TypeError("new_document_class must be a subclass of mongoengine.Document")
         self._document_class = new_document_class
 

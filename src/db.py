@@ -27,7 +27,7 @@ class MongoDBConnection:
                 except ConfigurationError as e:
                     raise MongoDBError(f"Configuration error: {e}")
                 except Exception as e:
-                    raise MongoDBError(f"An unexpected error occurred: {e}")
+                    raise MongoDBError(f"[{type(e).__name__}]An unexpected error occurred: {e}")
                 finally:
                     disconnect(alias='default')
 
