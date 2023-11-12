@@ -17,10 +17,9 @@ class Seeder:
         self.crud = crud
         self.fake = fake if fake is not None else None
 
-    def fake_to_db(self, doc_cls: t.Type[FakerDoc], count: int):
+    def fake_to_db(self, doc_cls: t.Type[FakerDoc]) -> Document:
         self.crud.document_class = doc_cls
-        for _ in range(count):
-            self.crud.create(doc_cls.get_data_faker(self.fake))
+        return self.crud.create(doc_cls.get_data_faker(self.fake))
 
     def json_to_db(self,
                    json_path,
