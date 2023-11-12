@@ -1,5 +1,12 @@
-from mongoengine import Document, CASCADE
-from mongoengine.fields import ListField, StringField, ReferenceField, EmailField, BooleanField, DictField
+from mongoengine import Document, CASCADE, EmbeddedDocument
+from mongoengine.fields import (
+    ListField,
+    StringField,
+    ReferenceField,
+    EmailField,
+    BooleanField,
+    EmbeddedDocumentField
+)
 
 
 class Author(Document):
@@ -18,12 +25,16 @@ class Quote(Document):
     meta = {"collection": "quotes_of"}
 
 
+class SentStatus(EmbeddedDocument):
+    email_sent = BooleanField(default=False)
+    sms_sent = BooleanField(default=False)
+
+
 class Contact(Document):
     full_name = StringField(required=True)
     email = EmailField(required=True)
     phone_number = StringField()
     address = StringField()
-
-    sent_status = DictField(default={'email_sent': False, 'sms_sent': False})
+    sent_status = EmbeddedDocumentField(SentStatus, default=SentStatus())
 
     meta = {'collection': 'contacts'}
