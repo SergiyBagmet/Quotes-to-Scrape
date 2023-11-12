@@ -3,7 +3,7 @@ from redis_lru import RedisLRU
 from src.config import mongo_uri, db_name, client
 from src.models import Quote, Author
 from src.crud import MongoCRUD
-from src.db import MongoDBConnection
+from src.db import MongoDBConnection, MongoDBError
 
 mongo_connection = MongoDBConnection(db_uri=mongo_uri)
 
@@ -17,7 +17,8 @@ class QuoteSearch:
         self.crud.document_class = Quote
         return self.crud.read_by_attr(attr_name, attr_value, count="many")
 
-    def input_parser(self, user_input: str):
+    @staticmethod
+    def input_parser(user_input: str):
         action, k_words = None, None
         try:
             action, k_words = [el.strip() for el in user_input.split(':')]
@@ -34,29 +35,32 @@ class QuoteSearch:
 
             attr_name = None
             attr_value = None
-            match action:
-                case "name":
-                    self.crud.document_class = Author
-                    attr_name = "author"
-                    attr_value = self.crud.read_by_attr("fullname__iexact", k_words)
+            try:
+                match action:
+                    case "name":
+                        self.crud.document_class = Author
+                        attr_name = "author"
+                        attr_value = self.crud.read_by_attr("fullname__iexact", k_words)
 
-                case "tag":
-                    attr_name = "tags__iregex"
-                    attr_value = k_words
+                    case "tag":
+                        attr_name = "tags__iregex"
+                        attr_value = k_words
 
-                case "tags":
-                    attr_name = "tags__in"
-                    attr_value = k_words.split(',')
+                    case "tags":
+                        attr_name = "tags__in"
+                        attr_value = k_words.split(',')
 
-                case "exit":
-                    print("Exiting...")
-                    break
+                    case "exit":
+                        print("Exiting...")
+                        break
 
-                case _:
-                    print("Unknown command")
+                    case _:
+                        print("Unknown command")
 
-            quotes = self.get_quotes(attr_name, attr_value)
-            self.display_quotes(quotes)
+                quotes = self.get_quotes(attr_name, attr_value)
+                self.display_quotes(quotes)
+            except MongoDBError as e:
+                print(f"[Error]: {e}")
 
     @staticmethod
     def display_quotes(quotes: list[Quote] | None):

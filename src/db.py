@@ -3,6 +3,10 @@ from mongoengine import connect, disconnect
 from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure, OperationFailure, ConfigurationError
 
 
+class MongoDBError(Exception):
+    pass
+
+
 class MongoDBConnection:
     def __init__(self, db_uri: str, ):
         self.db_uri = db_uri
@@ -15,15 +19,15 @@ class MongoDBConnection:
                     connect(db=db_name, host=self.db_uri, alias='default')
                     func(*args, **kwargs)
                 except ServerSelectionTimeoutError:
-                    print("Server selection timed out.")
+                    raise MongoDBError("Server selection timed out.")
                 except ConnectionFailure:
-                    print("Failed to connect to the server.")
+                    raise MongoDBError("Failed to connect to the server.")
                 except OperationFailure as e:
-                    print(f"Operation failed: {e}")
+                    raise MongoDBError(f"Operation failed: {e}")
                 except ConfigurationError as e:
-                    print(f"Configuration error: {e}")
+                    raise MongoDBError(f"Configuration error: {e}")
                 except Exception as e:
-                    print(f"An unexpected error occurred: {e}")
+                    raise MongoDBError(f"An unexpected error occurred: {e}")
                 finally:
                     disconnect(alias='default')
 

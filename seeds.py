@@ -1,7 +1,8 @@
 import json
 import typing as t
-from bson.objectid import ObjectId
+
 from mongoengine import Document
+
 from src.models import Author, Quote
 from src.db import MongoDBConnection
 from src.crud import MongoCRUD
