@@ -27,13 +27,21 @@ class QuoteParser(HtmlParser):
         self.parse_quotes()
         self.parse_authors_name()
         self.parse_tags()
-        # some_save_to_file
-        self.get_next_page_url()
+        # some_save_to_file TODO
 
     def parse_pages(self, count: int | None = None):
-        pass
+        print(self.base_url)
+        while True:
+            self.parse_page()  # TODO
+
+            next_page_url = self.get_next_page_url()
+            if count: count -= 1
+            if (not next_page_url) or (count == 0):
+                break
+
+            self.set_soup(next_page_url)
 
 
 if __name__ == '__main__':
     s = QuoteParser("http://quotes.toscrape.com/")
-    s.parse_page()
+    s.parse_pages()
