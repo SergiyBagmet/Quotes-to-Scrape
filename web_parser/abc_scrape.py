@@ -1,5 +1,7 @@
 from enum import IntEnum
+from abc import abstractmethod, ABC
 
+from bs4 import BeautifulSoup
 import requests
 
 
@@ -32,6 +34,13 @@ class HtmlFetcher:
             return None
 
         return response.text
+
+
+class HtmlParser(ABC, HtmlFetcher):
+    def __init__(self, url):
+        super().__init__(url)
+        self.html = self.fetch()
+        self.soup = BeautifulSoup(self.html, "lxml") if self.html else None
 
 
 if __name__ == '__main__':
