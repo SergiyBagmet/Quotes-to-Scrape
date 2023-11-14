@@ -46,9 +46,9 @@ class Seeder:
 def run_seeder():
     mongo_crud = MongoCRUD()
     seeder = Seeder(mongo_crud)
-    seeder.json_to_db("start_data/authors.json", doc_cls=Author)
+    seeder.json_to_db("scrape_data/authors.json", doc_cls=Author)
 
-    seeder.json_to_db("start_data/quotes.json",
+    seeder.json_to_db("scrape_data/quotes.json",
                       doc_cls=Quote,
                       ref_cls=Author,
                       ref_field='fullname',
