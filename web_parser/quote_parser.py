@@ -1,6 +1,8 @@
 import json
 from itertools import chain
 
+from bs4 import Tag
+
 from base_parse import HtmlParser
 
 
@@ -10,53 +12,72 @@ class QuoteParser(HtmlParser):
         self.base_url = url
         self.authors_ref = set()
 
-    def parse_quotes(self) -> list[str]:
-        quotes = self.soup.select(".quote span.text")
-        return [quote.get_text() for quote in quotes]
+        self.quotes_data = []
+        self.authors_data = []
 
-    def parse_authors_name(self):
-        authors_name = self.soup.select(".quote small.author")
-        return [name.get_text() for name in authors_name]
+    def parse_quote_card(self, card: Tag):
+        quote = card.find(class_='text').get_text()
+        author_name = card.find(class_='author').get_text()
+        tags = card.find(class_='tags').get_text(separator="\n", strip=True).split('\n')[1:]
 
-    def parse_authors_url(self):
-        authors_ref = self.soup.select(".quote span a")
-        [self.authors_ref.add(ref["href"]) for ref in authors_ref]
+        self.quotes_data.append(
+            {
+                "tags": tags,
+                "author": author_name,
+                "quote": quote,
+            }
+        )
 
-    def parse_tags(self):
-        tags_text = self.soup.select(".quote .tags")
-        tags_quotes = [tags_quote.get_text(separator="\n", strip=True) for tags_quote in tags_text]
-        return [tags.split('\n')[1:] for tags in tags_quotes]
+        author_ref = card.find(class_='author').find_next("a")["href"]
+        self.parse_author_ref(author_ref)
+
+    def parse_author_ref(self, author_ref):
+        if author_ref not in self.authors_ref:
+            self.authors_ref.add(author_ref)
+            self.set_page(self.base_url + author_ref)
+
+            fullname = self.soup.find(class_="author-title").get_text()
+            born_date = self.soup.find(class_="author-born-date").get_text()
+            born_location = self.soup.find(class_="author-born-location").get_text()
+            description = self.soup.find(class_="author-description").get_text(strip=True)
+            self.authors_data.append(
+                {
+                    "fullname": fullname,
+                    "born_date": born_date,
+                    "born_location": born_location,
+                    "description": description,
+                }
+            )
 
     def get_next_page_url(self):
         next_page_url = self.soup.select(".next a")
         return self.base_url + next_page_url[0]["href"] if next_page_url else None
 
     def parse_page(self):
-        self.parse_authors_url()
-
-        return [{'tags': tags, 'author': author_name, 'quote': quote} for tags, author_name, quote in
-                zip(self.parse_tags(), self.parse_authors_name(), self.parse_quotes())]
+        cards = self.soup.find_all(class_='quote')
+        for card in cards:
+            self.parse_quote_card(card)
 
     def parse_pages(self, count: int | None = None):
         while True:
-            yield self.parse_page()
-
             next_page_url = self.get_next_page_url()
+            self.parse_page()
             if count: count -= 1
             if (not next_page_url) or (count == 0):
                 break
 
-            self.set_soup(next_page_url)
+            self.set_page(next_page_url)
 
-    def quotes_to_json(self, file):
-        data = list(chain(*self.parse_pages()))
-        with open(file, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
+        return self.quotes_data, self.authors_data
+
+    @staticmethod
+    def data_to_json(filename, data):
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
 
 
 if __name__ == '__main__':
     q_parser = QuoteParser("http://quotes.toscrape.com/")
-    q_parser.quotes_to_json('../scrape_data/quotes_data.json')
-
-    for url in q_parser.authors_ref:
-        print(url)
+    q_parser.parse_pages()
+    q_parser.data_to_json("../scrape_data/quotes_data.json", q_parser.quotes_data)
+    q_parser.data_to_json("../scrape_data/authors_data.json", q_parser.authors_data)
