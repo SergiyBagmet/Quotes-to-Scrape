@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, ResultSet
 import requests
 
 
@@ -41,11 +41,10 @@ class HtmlParser(HtmlFetcher):
         self.html = self.fetch()
         self.soup = BeautifulSoup(self.html, "lxml") if self.html else None
 
-    def set_soup(self, url):
+    def set_page(self, url):
         self.url = url
         self.html = self.fetch()
         self.soup = BeautifulSoup(self.html, "lxml") if self.html else None
-
 
 if __name__ == '__main__':
     pass
