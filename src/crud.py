@@ -1,9 +1,26 @@
 import typing as t
 from functools import wraps
 
+import pika
+from pika.exceptions import AMQPConnectionError
+from pymongo.errors import DuplicateKeyError
 from redis_lru import RedisLRU
 from bson.objectid import ObjectId
-from mongoengine import Document, DoesNotExist
+from mongoengine import Document, DoesNotExist, NotUniqueError
+
+from my_logger import MyLogger
+from src.config import host_rmq, port_rmq, password_rmq, username_rmq
+
+logger_crud = MyLogger("CRUD", 10).get_logger()
+
+try:
+    connection_rmq = pika.BlockingConnection(pika.ConnectionParameters(
+                                host=host_rmq,
+                                port=port_rmq,
+                                credentials=pika.PlainCredentials(username_rmq, password_rmq))
+    )
+except AMQPConnectionError:
+    logger_crud.warning(f"Error connecting to RabbitMQ: {AMQPConnectionError}")
 
 
 class MongoCRUD:
@@ -32,15 +49,20 @@ class MongoCRUD:
 
     @document_class.setter
     def document_class(self, new_document_class: t.Type[Document] | None):
-        if new_document_class and not issubclass(new_document_class, Document):
-            pass
-            raise TypeError("new_document_class must be a subclass of mongoengine.Document")
+        if new_document_class is not None and not issubclass(new_document_class, Document):
+            msg_error = f" '{new_document_class}' must be a subclass of mongoengine.Document"
+            logger_crud.error(msg_error)
+            raise TypeError(msg_error)
         self._document_class = new_document_class
 
     def create(self, document_data: dict):
-        new_document = self.document_class(**document_data)
-        new_document.save()
-        return new_document
+        try:
+            new_document = self.document_class(**document_data)
+            new_document.save()
+            return new_document
+        except (DuplicateKeyError, NotUniqueError) as e:
+            logger_crud.warning(f"Error creating, document mast be unique: {e}")
+            return None
 
     @cache_decorator
     def read(self, pk: ObjectId):

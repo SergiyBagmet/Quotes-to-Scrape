@@ -5,7 +5,7 @@ from src.models import Quote, Author
 from src.crud import MongoCRUD
 from src.db import MongoDBConnection, MongoDBError
 
-mongo_connection = MongoDBConnection(db_uri=mongo_uri)
+mongo_connection = MongoDBConnection(mongo_uri)
 
 
 class QuoteSearch:
@@ -73,13 +73,11 @@ class QuoteSearch:
 
 
 @mongo_connection(db_name=db_name)
-def main():
-    radis_cache = RedisLRU(client, max_size=20)
-    crud = MongoCRUD(cache=radis_cache)
+def search(crud: MongoCRUD):
 
     q_search = QuoteSearch(crud)
     q_search.execute()
 
 
 if __name__ == '__main__':
-    main()
+    pass

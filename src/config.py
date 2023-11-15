@@ -34,10 +34,6 @@ port_rmq = config.getint('rabbitmq', 'port')
 username_rmq = config.get('rabbitmq', 'username')
 password_rmq = config.get('rabbitmq', 'password')
 
-connection_rmq = pika.BlockingConnection(pika.ConnectionParameters(
-                            host=host_rmq,
-                            port=port_rmq,
-                            credentials=pika.PlainCredentials(username_rmq, password_rmq))
-)
+
 
 

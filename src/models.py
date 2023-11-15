@@ -14,14 +14,14 @@ from mongoengine.fields import (
 
 class Author(Document):
     fullname = StringField(required=True, unique=True)
-    born_date = StringField(max_length=50)
+    born_date = StringField(max_length=100)
     born_location = StringField(max_length=150)
     description = StringField()
     meta = {"collection": "authors"}
 
 
 class Quote(Document):
-    tags = ListField(StringField(max_length=15))
+    tags = ListField(StringField())
     author = ReferenceField(Author, required=True, reverse_delete_rule=CASCADE)
     quote = StringField()
 

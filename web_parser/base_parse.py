@@ -1,7 +1,11 @@
 from enum import IntEnum
 
-from bs4 import BeautifulSoup, ResultSet
+from bs4 import BeautifulSoup
 import requests
+
+from my_logger import MyLogger
+
+logger_html = MyLogger('html', 10).get_logger()
 
 
 class Status(IntEnum):
@@ -27,12 +31,15 @@ class HtmlFetcher:
         self.url = url
 
     def fetch(self):
-        response = requests.get(self.url)
-        if response.status_code != Status.OK:
-            print(f"Failed to fetch HTML. Status code: {response.status_code}")
+        try:
+            response = requests.get(self.url, timeout=10)
+            response.raise_for_status()
+            logger_html.info(f"HTML fetched successfully from {self.url}")
+            return response.text
+        except requests.exceptions.RequestException as e:
+            error_message = f"Failed to fetch HTML from {self.url}. Error: {e}"
+            logger_html.error(error_message)
             return None
-
-        return response.text
 
 
 class HtmlParser(HtmlFetcher):
@@ -45,6 +52,7 @@ class HtmlParser(HtmlFetcher):
         self.url = url
         self.html = self.fetch()
         self.soup = BeautifulSoup(self.html, "lxml") if self.html else None
+
 
 if __name__ == '__main__':
     pass

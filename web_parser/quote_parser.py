@@ -1,17 +1,19 @@
 import json
-from itertools import chain
 
 from bs4 import Tag
 
-from base_parse import HtmlParser
+from web_parser.base_parse import HtmlParser
+from my_logger import MyLogger
+
+logger_parser = MyLogger("parser", 10).get_logger()
 
 
 class QuoteParser(HtmlParser):
     def __init__(self, url):
         super().__init__(url)
         self.base_url = url
-        self.authors_ref = set()
 
+        self.authors_ref = set()
         self.quotes_data = []
         self.authors_data = []
 
@@ -29,14 +31,14 @@ class QuoteParser(HtmlParser):
         )
 
         author_ref = card.find(class_='author').find_next("a")["href"]
-        self.parse_author_ref(author_ref)
+        self.parse_author_ref(author_ref, author_name)
 
-    def parse_author_ref(self, author_ref):
+    def parse_author_ref(self, author_ref, author_name):
         if author_ref not in self.authors_ref:
             self.authors_ref.add(author_ref)
             self.set_page(self.base_url + author_ref)
 
-            fullname = self.soup.find(class_="author-title").get_text()
+            fullname = author_name # self.soup.find(class_="author-title").get_text()
             born_date = self.soup.find(class_="author-born-date").get_text()
             born_location = self.soup.find(class_="author-born-location").get_text()
             description = self.soup.find(class_="author-description").get_text(strip=True)
@@ -61,6 +63,7 @@ class QuoteParser(HtmlParser):
     def parse_pages(self, count: int | None = None):
         while True:
             next_page_url = self.get_next_page_url()
+            # get url next page before parse because in parse we set_page to author details
             self.parse_page()
             if count: count -= 1
             if (not next_page_url) or (count == 0):
@@ -70,14 +73,12 @@ class QuoteParser(HtmlParser):
 
         return self.quotes_data, self.authors_data
 
-    @staticmethod
-    def data_to_json(filename, data):
-        with open(filename, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+
+def data_to_json(filename, data):
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    logger_parser.info(f"JSON serialization [{type(data)}] to file '{filename}'")
 
 
 if __name__ == '__main__':
-    q_parser = QuoteParser("http://quotes.toscrape.com/")
-    q_parser.parse_pages()
-    q_parser.data_to_json("../scrape_data/quotes_data.json", q_parser.quotes_data)
-    q_parser.data_to_json("../scrape_data/authors_data.json", q_parser.authors_data)
+    pass

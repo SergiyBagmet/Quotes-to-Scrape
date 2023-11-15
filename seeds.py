@@ -8,6 +8,9 @@ from src.models import Author, Quote, FakerDoc
 from src.db import MongoDBConnection
 from src.crud import MongoCRUD
 from src.config import mongo_uri, db_name
+from my_logger import MyLogger
+
+logger_seed = MyLogger('seed', 10).get_logger()
 
 db_connection = MongoDBConnection(mongo_uri)
 
@@ -40,15 +43,15 @@ class Seeder:
 
             self.crud.document_class = doc_cls
             self.crud.create(el)
+        logger_seed.info(f"Saving json {json_path} by documents '{self.crud.document_class}' to DB")
 
 
 @db_connection(db_name=db_name)
-def run_seeder():
-    mongo_crud = MongoCRUD()
-    seeder = Seeder(mongo_crud)
-    seeder.json_to_db("scrape_data/authors.json", doc_cls=Author)
+def run_seeder(crud: MongoCRUD, authors_json, quotes_json):
 
-    seeder.json_to_db("scrape_data/quotes.json",
+    seeder = Seeder(crud)
+    seeder.json_to_db(authors_json, doc_cls=Author)
+    seeder.json_to_db(quotes_json,
                       doc_cls=Quote,
                       ref_cls=Author,
                       ref_field='fullname',
@@ -56,4 +59,4 @@ def run_seeder():
 
 
 if __name__ == '__main__':
-    run_seeder()
+    pass
