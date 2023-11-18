@@ -3,14 +3,12 @@ import json
 from bs4 import Tag
 
 from web_parser.base_parse import HtmlParser
-from my_logger import MyLogger
-
-logger_parser = MyLogger("parser", 10).get_logger()
+from my_logger import logger
 
 
 class QuoteParser(HtmlParser):
-    def __init__(self, url):
-        super().__init__(url)
+    def __init__(self, url, login_ref, login_data):
+        super().__init__(url=url, login_ref=login_ref, login_data=login_data)
         self.base_url = url
 
         self.authors_ref = set()
@@ -30,15 +28,19 @@ class QuoteParser(HtmlParser):
             }
         )
 
-        author_ref = card.find(class_='author').find_next("a")["href"]
-        self.parse_author_ref(author_ref, author_name)
+        author_ref = card.find(class_='author').find_next("a")
+        if self.login_status:
+            author_url = author_ref.find_next("a")['href']
+            print(author_url)
+
+        self.parse_author_ref(author_ref["href"], author_name)
 
     def parse_author_ref(self, author_ref, author_name):
         if author_ref not in self.authors_ref:
             self.authors_ref.add(author_ref)
             self.set_page(self.base_url + author_ref)
 
-            fullname = author_name # self.soup.find(class_="author-title").get_text()
+            fullname = author_name  # self.soup.find(class_="author-title").get_text()
             born_date = self.soup.find(class_="author-born-date").get_text()
             born_location = self.soup.find(class_="author-born-location").get_text()
             description = self.soup.find(class_="author-description").get_text(strip=True)
@@ -77,7 +79,7 @@ class QuoteParser(HtmlParser):
 def data_to_json(filename, data):
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-    logger_parser.info(f"JSON serialization [{type(data)}] to file '{filename}'")
+    logger.info(f"JSON serialization [{type(data)}] to file '{filename}'")
 
 
 if __name__ == '__main__':

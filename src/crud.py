@@ -8,10 +8,10 @@ from redis_lru import RedisLRU
 from bson.objectid import ObjectId
 from mongoengine import Document, DoesNotExist, NotUniqueError
 
-from my_logger import MyLogger
+from my_logger import logger
 from src.config import host_rmq, port_rmq, password_rmq, username_rmq
 
-logger_crud = MyLogger("CRUD", 10).get_logger()
+
 
 try:
     connection_rmq = pika.BlockingConnection(pika.ConnectionParameters(
@@ -20,7 +20,7 @@ try:
                                 credentials=pika.PlainCredentials(username_rmq, password_rmq))
     )
 except AMQPConnectionError:
-    logger_crud.warning(f"Error connecting to RabbitMQ: {AMQPConnectionError}")
+    logger.warning(f"Error connecting to RabbitMQ: {AMQPConnectionError}")
 
 
 class MongoCRUD:
@@ -51,7 +51,7 @@ class MongoCRUD:
     def document_class(self, new_document_class: t.Type[Document] | None):
         if new_document_class is not None and not issubclass(new_document_class, Document):
             msg_error = f" '{new_document_class}' must be a subclass of mongoengine.Document"
-            logger_crud.error(msg_error)
+            logger.error(msg_error)
             raise TypeError(msg_error)
         self._document_class = new_document_class
 
@@ -61,7 +61,7 @@ class MongoCRUD:
             new_document.save()
             return new_document
         except (DuplicateKeyError, NotUniqueError) as e:
-            logger_crud.warning(f"Error creating, document mast be unique: {e}")
+            logger.warning(f"Error creating, document mast be unique: {e}")
             return None
 
     @cache_decorator

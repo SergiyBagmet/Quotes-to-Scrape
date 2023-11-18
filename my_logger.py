@@ -62,5 +62,6 @@ class MyLogger:
         return self.logger
 
 
+logger = MyLogger('parser', 10).get_logger()
 if __name__ == "__main__":
     pass

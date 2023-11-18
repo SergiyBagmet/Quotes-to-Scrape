@@ -1,11 +1,10 @@
 from enum import IntEnum
 
+from fake_useragent import UserAgent
 from bs4 import BeautifulSoup
 import requests
 
-from my_logger import MyLogger
-
-logger_html = MyLogger('html', 10).get_logger()
+from my_logger import logger
 
 
 class Status(IntEnum):
@@ -29,23 +28,41 @@ class Status(IntEnum):
 class HtmlFetcher:
     def __init__(self, url):
         self.url = url
+        self.user_agent = UserAgent()
+        self.session = requests.Session()
+        self.login_status: bool | None = None
+
+    def login(self, login_ref, login_data):
+        login_url = self.url + login_ref
+        headers = {'User-Agent': self.user_agent.random}
+        response = self.session.post(login_url, data=login_data, headers=headers, timeout=10)
+        if response.status_code == Status.OK:
+            self.login_status = True
+            logger.info(f"Login successful from {login_url}")
+            return response.text
+        else:
+            self.login_status = False
+            logger.warning(f"Login unsuccessful from {login_url}. Check credentials.")
+            return None
 
     def fetch(self):
         try:
-            response = requests.get(self.url, timeout=10)
+            response = self.session.get(self.url, timeout=10)
             response.raise_for_status()
-            logger_html.info(f"HTML fetched successfully from {self.url}")
+            logger.info(f"HTML fetched successfully from {self.url}")
             return response.text
         except requests.exceptions.RequestException as e:
             error_message = f"Failed to fetch HTML from {self.url}. Error: {e}"
-            logger_html.error(error_message)
+            logger.error(error_message)
             return None
 
 
 class HtmlParser(HtmlFetcher):
-    def __init__(self, url):
+    def __init__(self, url, login_ref, login_data):
         super().__init__(url)
-        self.html = self.fetch()
+        self.login_ref = login_ref
+        self.login_data = login_data
+        self.html = self.login(login_ref, login_data)
         self.soup = BeautifulSoup(self.html, "lxml") if self.html else None
 
     def set_page(self, url):

@@ -1,6 +1,6 @@
 from redis_lru import RedisLRU
 
-from src.config import mongo_uri, db_name, client
+from src.config import mongo_uri, db_name
 from src.models import Quote, Author
 from src.crud import MongoCRUD
 from src.db import MongoDBConnection, MongoDBError
